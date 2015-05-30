@@ -1,25 +1,41 @@
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/nonfree/features2d.hpp"
+#include "opencv2/nonfree/nonfree.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 #include <iostream>
-#include <cv.h>
-#include <highgui.h>
+#include <algorithm>
 #include "music.h"
-using namespace std;
-char key;
-int main()
-{
-	char* temp=0;
-	InstrumentModel imodel(temp);
-    cvNamedWindow("Camera_Output", 1);    //Create window
-    CvCapture* capture = cvCaptureFromCAM(CV_CAP_ANY);  //Capture using any camera connected to your system
-    while(1){ //Create infinte loop for live streaming
 
-        IplImage* frame = cvQueryFrame(capture); //Create image frames from capture
-        cvShowImage("Camera_Output", frame);   //Show image frames on created window
-        key = cvWaitKey(5);     //Capture Keyboard stroke
-        if (char(key) == 27){
-            break;      //If you hit ESC key loop will break.
-        }
+using namespace cv;
+using namespace std;
+
+int main() {
+    // Define a detector
+    Detector detector;
+    Mat image;
+    image = imread("data/t1_1.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    
+
+    vector<Point> caliblocs;
+    detector.find_calib_locs(image, caliblocs);
+
+    cout << "Found " << caliblocs.size() << " calib points" << endl;
+    Mat x = Mat::zeros(image.rows, image.cols, CV_8U);
+    for (int i = 0; i < caliblocs.size(); i++) {
+        x.at<uchar>(caliblocs[i]) = 255;
     }
-    cvReleaseCapture(&capture); //Release capture.
-    cvDestroyWindow("Camera_Output"); //Destroy Window
+    Mat y;
+    int erosion_size = 3;  
+    Mat element = getStructuringElement(MORPH_CROSS,
+          Size(2 * erosion_size + 1, 2 * erosion_size + 1),
+          Point(0, 0) );
+    dilate(x, y, element);
+    namedWindow( "Display window", 0);
+    imshow("Display window", image);
+    namedWindow( "Display window2", 0);
+    imshow("Display window2", y);
+    waitKey(0);
     return 0;
 }

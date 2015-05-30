@@ -1,4 +1,6 @@
 #include <map>
+#include <opencv2/core/core.hpp>
+
 enum InstrumentType {
     XYLO,
     DRUM
@@ -30,8 +32,11 @@ public:
     bool init();
     bool next(MusicParams &params);
     void close();
+    void find_calib_locs(cv::Mat &image, std::vector<cv::Point> &locs);
 private:
-    
+    void find_connected_components(cv::Mat &binary, 
+                        std::vector<std::vector<cv::Point> > &blobs);
+    cv::Point find_mean(std::vector<cv::Point> blob);
 };
 
 
