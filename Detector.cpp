@@ -70,6 +70,11 @@ void Detector::find_calib_locs(Mat &image, vector<Point> &locs) {
     }
 }
 
+/////////////////////////////////////////////
+//		Private methods
+/////////////////////////////////////////////
+
+
 void Detector::find_connected_components(Mat &binary, 
                         vector<vector<Point> > &blobs) {
 	blobs.clear();

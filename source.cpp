@@ -6,6 +6,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include <iostream>
 #include <algorithm>
+#include <string>
 #include "music.h"
 
 using namespace cv;
@@ -14,6 +15,14 @@ using namespace std;
 int main() {
     // Define a detector
     Detector detector;
+    string tempfile = "templates/template.1";
+    InstrumentModel imodel(tempfile);
+    Mat tempi;
+    imodel.toImage(tempi);
+    namedWindow( "template", 0);
+    imshow("template", tempi);
+    waitKey(0);
+    cout << imodel.rows << " " << imodel.cols << endl;
     Mat image;
     image = imread("data/t1_1.jpg", CV_LOAD_IMAGE_GRAYSCALE);
     
@@ -22,6 +31,9 @@ int main() {
     detector.find_calib_locs(image, caliblocs);
 
     cout << "Found " << caliblocs.size() << " calib points" << endl;
+    for (int i = 0; i  < caliblocs.size(); i++) {
+        cout << caliblocs[i] << endl;
+    }
     Mat x = Mat::zeros(image.rows, image.cols, CV_8U);
     for (int i = 0; i < caliblocs.size(); i++) {
         x.at<uchar>(caliblocs[i]) = 255;

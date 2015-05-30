@@ -18,11 +18,15 @@ struct MusicParams {
 
 class InstrumentModel {
 public:
-    InstrumentModel(char* fileName);
+    int rows;
+    int cols;
+    InstrumentModel(std::string fileName);
     double getFreq(int x, int y);
-    double getIntensity(int x, int y);    
+    double getIntensity(int x, int y);
+    void toImage(cv::Mat &m);    
 private:
     std::map<Location,MusicParams> model;
+    std::vector<std::vector<int> > values;
 };
 
 
