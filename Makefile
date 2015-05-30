@@ -10,3 +10,6 @@ all : source.cpp
 
 clean:
 	@rm -f music
+	
+% : %.cpp
+	g++ $(CFLAGS) -o $@ $< $(LIBS)
