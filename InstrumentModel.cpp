@@ -29,6 +29,9 @@ InstrumentModel::InstrumentModel(string fileName) {
 			for (int j = 0; j < cols; j++) {
 				ss >> val;
 				row.push_back(val);
+				if (val == 1) {
+					calib_points.push_back(Point2f(i, j));
+				}
 			}
 			values.push_back(row);
 		}

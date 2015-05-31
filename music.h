@@ -1,5 +1,7 @@
 #include <map>
 #include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <deque>
 
 enum InstrumentType {
     XYLO,
@@ -20,6 +22,7 @@ class InstrumentModel {
 public:
     int rows;
     int cols;
+    std::vector<cv::Point2f> calib_points;
     InstrumentModel(std::string fileName);
     double getFreq(int x, int y);
     double getIntensity(int x, int y);
@@ -32,15 +35,24 @@ private:
 
 class Detector {
 public:
-    Detector();
+    Detector(InstrumentModel &imodel, cv::VideoCapture &cp);
     bool init();
     bool next(MusicParams &params);
     void close();
-    void find_calib_locs(cv::Mat &image, std::vector<cv::Point> &locs);
+    void find_calib_locs(cv::Mat &image, std::vector<cv::Point2f> &locs);
+    cv::Point2f findPen(cv::Mat &image);
 private:
+    InstrumentModel *imodel;
+    cv::VideoCapture *cp;
+    cv::Mat homog;
     void find_connected_components(cv::Mat &binary, 
                         std::vector<std::vector<cv::Point> > &blobs);
     cv::Point find_mean(std::vector<cv::Point> blob);
+    bool isLocalMax();
+    std::deque<float> buffer;
+    const int buff_size;
+    int duration;
+    MusicParams previous;
 };
 
 
