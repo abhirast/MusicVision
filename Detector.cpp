@@ -25,46 +25,76 @@ bool Detector::init() {
     Mat image, gr_image;
     cp->read(image);
     cvtColor(image, gr_image, COLOR_BGR2GRAY);
-    vector<Point2f> calib_markings;
     find_calib_locs(gr_image, calib_markings);
+    if (showCalib) {
+        namedWindow("calibration", 0);
+     	for (int i = 0; i < calib_markings.size(); i++) {
+     		Point x((int) calib_markings[i].x, (int) calib_markings[i].y);
+            rectangle(image, x - Point(5, 5), x + Point(5, 5), 
+            	Scalar( 0, 255, 255 ), -1, 8 );
+     	}
+     	imshow("calibration", image);   
+    }
     homog = findHomography(calib_markings, imodel->calib_points, CV_RANSAC);
  	for (int i = 0; i < buff_size; i++) {
- 		buffer.push_back(0.0);
+ 		buffer.push_back(Point2f(20.0, 20.0));
  	}
     return false;
 }
         
 bool Detector::next(MusicParams &params) {
+    cout << "next called" << endl;
     bool found = false;
     Mat image;
     if (!cp->read(image)) return false;
+    
     Point2f loc = findPen(image);
-    buffer.pop_front();
-    buffer.push_back(loc.y);
-    // find if the center is a minima
-    bool isMax =  isLocalMax(); 
-    if (!isMax) {
-    	if (duration <= 0) {
-    		params.frequency = -1;
-    		return true;
-    	} else {
-    		params = previous;
-    		duration--;
-    		return true;
-    	}
+    addToBuffer(loc);
+    Point2f newloc = buffer[buffer.size()/2];
+    // cout << newloc << endl;
+    if (showTracking) {
+    	namedWindow("temp", 0);
+    	Point x((int) newloc.x, (int) newloc.y);
+        rectangle(image, x - Point(5, 5), x + Point(5, 5), 
+        			Scalar( 0, 255, 255 ), -1, 8);
+        imshow("temp", image);
     }
-    // found a local minima
-    duration = 10;
-    // find the location
-    vector<Point2f> predicted;
-    vector<Point2f> input;
-    input.push_back(loc);
-    perspectiveTransform(input, predicted, homog);
-    cout << predicted[0] << endl;
-    // set the MusicParams by reading from imodel depending on position
-    params.frequency = 200;
-    params.intensity = 1.0;
-    previous = params;
+    
+    // find if the center is a maxima
+    if (isLocalMax()) {
+    	// found a local maxima indicating hit
+    	duration = 10;
+    	// find the location
+    	vector<Point2f> predicted;
+    	vector<Point2f> input;
+    	input.push_back(newloc);
+    	perspectiveTransform(input, predicted, homog);
+    	if (showTracking) {
+    		Mat tempIm;
+    		int tempi = floor(predicted[0].x);
+    		int tempj = floor(predicted[0].y);
+    		if (tempi >= 0 && tempj >= 0) {
+    			imodel->toImage(tempIm);
+    			tempIm.at<uchar>(tempi, tempj) = 128;
+    			namedWindow("board", 0);
+    			imshow("board", tempIm);
+    			//waitKey(5000);
+    		} else {
+    			cout << "Bad point" << endl;
+    		}
+    	}
+    	// set the MusicParams by reading from imodel depending on position
+    	params.frequency = 200;
+    	params.intensity = 1.0;
+    	previous = params;
+    } 
+    else if (duration <= 0) {
+    	params.frequency = -1;
+    } 
+    else {
+    	params = previous;
+    	duration--;
+    }
     return true;
 }
 
@@ -101,8 +131,6 @@ void Detector::find_calib_locs(Mat &image, vector<Point2f> &locs) {
  
     // Apply erosion or dilation on the image
     erode(page, res, element);
-    imshow("debug", res);
-    waitKey(0);
     // find_connected_components(page, blobs);
     find_connected_components(res, blobs);
     
@@ -179,61 +207,51 @@ Point Detector::find_mean(vector<Point> blob) {
 
 
 Point2f Detector::findPen(Mat &input_image) {
+	int iLowH = 39, iHighH =  80;
+	int iLowS = 57, iHighS = 157;
+	int iLowV =  0, iHighV = 255;
 	
-	int iLowH = 44;
-	int iHighH = 74;
+	Mat hsv_tx_image, color_thresh_image, bin_image;
 
-	int iLowS = 72;
-	int iHighS = 152;
-
-	int iLowV = 41;
-	int iHighV = 91;
-	
-	Mat hsv_tx_image, color_thresh_image,blurred_image,opened_image, dila_open;
-
-	int width = input_image.cols;
-	int height = input_image.rows;
-	Size frameSize(static_cast<int>(width),static_cast<int>(height));
-	
-	int morph_size=3;
-	int morph_dilate_size=5;
-	Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size( 2*morph_size + 1, 
-						2*morph_size+1 ), Point( morph_size, morph_size ) );
-	Mat dilate_kernel=getStructuringElement(MORPH_ELLIPSE, 
-				Size( 2*morph_dilate_size+ 1, 2*morph_dilate_size+1 ), 
-				Point( morph_dilate_size, morph_dilate_size) );
-	
-	cvtColor(input_image,hsv_tx_image,COLOR_BGR2HSV);
-	inRange(hsv_tx_image,Scalar(iLowH, iLowS, iLowV),Scalar(iHighH, iHighS, iHighV),color_thresh_image);
-	GaussianBlur(color_thresh_image,blurred_image,Size(3,3),5,5,BORDER_DEFAULT);
-	morphologyEx(blurred_image,opened_image,MORPH_OPEN, kernel);
-	dilate(opened_image,dila_open,dilate_kernel);
-	
+	cvtColor(input_image, hsv_tx_image, COLOR_BGR2HSV);
+	inRange(hsv_tx_image, Scalar(iLowH, iLowS, iLowV), 
+				Scalar(iHighH, iHighS, iHighV), color_thresh_image);
     
-    Mat bin_image;
-    dila_open.convertTo(bin_image, CV_8UC1);
-    imshow("myVideo",bin_image);
-    int xpos = 0, ypos = 0, count = 0;
-    bool found = false;
-    for (int i = 0; i < bin_image.rows; i++) {
-    	for (int j = 0; j < bin_image.cols; j++) {
-    		if (bin_image.at<uchar>(i, j) > 0) {
-    			xpos += i;
-    			ypos = max(ypos, j);
-    			count++;
-    			found = true;
-    		}
-    	} 
+    color_thresh_image.convertTo(bin_image, CV_8UC1);
+    vector<vector<Point> > blobs;
+    find_connected_components(bin_image, blobs);
+
+    // look for connected component of size greater than 150
+    int index = -1;
+    for (int i = 0; i < blobs.size(); i++) {
+    	if (blobs[i].size() > 150) index = i;
     }
-    if (!found) return Point2f(-1, -1);
-    // cout << xpos/count << " " << ypos << " " << count <<endl;
-    return Point2f(1.0*xpos/count, ypos);
+
+    if (index < 0) return Point2f(-1, -1);
+    int xpos = 0, ypos = 0;
+    for (int i = 0; i < blobs[index].size(); i++) {
+    	xpos += blobs[index][i].x;
+    	ypos = max(ypos, blobs[index][i].y);
+    }
+    Point2f pt(1.0*xpos/blobs[index].size(), ypos);
+    return pt;
 }
 
 bool Detector::isLocalMax() {
 	int count = 0;
 	for (int i = 0; i < buff_size; i++) {
-		if (buffer[i] > buffer[buff_size/2]) count++;
+		if (buffer[i].y > buffer[floor(buff_size/2)].y) count++;
 	}
 	return count < 3;
+}
+
+void Detector::addToBuffer(Point2f position) {
+	buffer.pop_front();
+	if (position.x < 0) {
+		// do smoothing based on previous values
+		Point2f pos = 2 * buffer[buffer.size() - 1]  - buffer[buffer.size() - 2];
+		buffer.push_back(pos);
+	} else {
+		buffer.push_back(position);
+	}
 }

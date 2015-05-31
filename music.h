@@ -3,19 +3,19 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <deque>
 
+
+const bool showTracking = true;
+const bool showCalib = true;
+
 enum InstrumentType {
     XYLO,
     DRUM
 };
 
-struct Location {
-    int x;
-    int y;
-};
 
 struct MusicParams {
-    double frequency;
-    double intensity;
+    int note;
+    int intensity;
 };
 
 class InstrumentModel {
@@ -24,11 +24,11 @@ public:
     int cols;
     std::vector<cv::Point2f> calib_points;
     InstrumentModel(std::string fileName);
-    double getFreq(int x, int y);
+    int getNote(int x, int y);
     double getIntensity(int x, int y);
     void toImage(cv::Mat &m);    
 private:
-    std::map<Location,MusicParams> model;
+    std::vector<std::vector<int> > intensity;
     std::vector<std::vector<int> > values;
 };
 
@@ -41,6 +41,7 @@ public:
     void close();
     void find_calib_locs(cv::Mat &image, std::vector<cv::Point2f> &locs);
     cv::Point2f findPen(cv::Mat &image);
+    std::vector<cv::Point2f> calib_markings;
 private:
     InstrumentModel *imodel;
     cv::VideoCapture *cp;
@@ -49,7 +50,8 @@ private:
                         std::vector<std::vector<cv::Point> > &blobs);
     cv::Point find_mean(std::vector<cv::Point> blob);
     bool isLocalMax();
-    std::deque<float> buffer;
+    std::deque<cv::Point2f> buffer;
+    void addToBuffer(cv::Point2f position);
     const int buff_size;
     int duration;
     MusicParams previous;
@@ -58,9 +60,9 @@ private:
 
 class Player {
 public:
-    Player();
+    Player(InstrumentType itype);
     bool play(MusicParams &params);
-    void close(); 
+    void close();
 private:
     InstrumentType itype;
 };

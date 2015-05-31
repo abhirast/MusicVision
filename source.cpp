@@ -13,9 +13,9 @@
 using namespace cv;
 using namespace std;
 
-int main() {
+int main2() {
     string templ = "templates/template.1";
-    string vidfile = "data/floor-three-drums.avi";
+    string vidfile = "data/piano.avi";
     // open the video source
     VideoCapture cp;
     cp.open(vidfile);
@@ -28,5 +28,22 @@ int main() {
     while(detector.next(mparams)) {
 
     }
+
     return 0;
+}
+
+int main() {
+    string templ = "templates/template.1";
+    string vidfile = "data/correct-piano.avi";
+    // open the video source
+    VideoCapture cp;
+    InstrumentModel imodel(templ);
+    Detector detector(imodel, cp);
+    cp.open(vidfile);
+    detector.init();
+    Mat image;
+    MusicParams mparams;
+    while (detector.next(mparams)) {  
+        if (waitKey(100) > 0) break;  
+    }
 }

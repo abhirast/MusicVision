@@ -35,6 +35,16 @@ InstrumentModel::InstrumentModel(string fileName) {
 			}
 			values.push_back(row);
 		}
+		for (int i = 0; i < rows; i++) {
+			row.clear();
+			getline(templ, line);
+			stringstream ss(line);
+			for (int j = 0; j < cols; j++) {
+				ss >> val;
+				row.push_back(val);
+			}
+			intensity.push_back(row);
+		}
 		templ.close();
 	}
 }
@@ -50,7 +60,7 @@ void InstrumentModel::toImage(Mat &m) {
 	}
 }
 
-double InstrumentModel::getFreq(int x, int y) {
+int InstrumentModel::getNote(int x, int y) {
     return 0.0;
 }
 
