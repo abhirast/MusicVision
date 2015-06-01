@@ -33,7 +33,8 @@ bool Detector::init() {
             rectangle(image, x - Point(5, 5), x + Point(5, 5), 
             	Scalar( 0, 255, 255 ), -1, 8 );
      	}
-     	imshow("calibration", image);   
+     	imshow("calibration", image);
+     	waitKey(0);
     }
     homog = findHomography(calib_markings, imodel->calib_points, CV_RANSAC);
  	for (int i = 0; i < buff_size; i++) {

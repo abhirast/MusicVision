@@ -15,8 +15,8 @@ using namespace std;
 
 
 int main() {
-    string templ = "templates/template.1";
-    string vidfile = "data/correct-piano.avi";
+    string templ = "templates/piano";
+    string vidfile = "data/testcase10.avi";
     InstrumentType itype = XYLO;
     // open the video source
     VideoCapture cp;
