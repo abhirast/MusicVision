@@ -4,8 +4,8 @@ import numpy as np
 f = open('drums.txt')
 nums = f.readlines()
 
-vals = map(lambda t:map(int, t.strip().split()), nums)
-y, x, _ = zip(*vals)
+vals = map(lambda t:map(float, t.strip().split()), nums)
+x, y = zip(*vals)
 
 y = np.array(y)
 

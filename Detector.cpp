@@ -43,7 +43,6 @@ bool Detector::init() {
 }
         
 bool Detector::next(MusicParams &params) {
-    cout << "next called" << endl;
     bool found = false;
     Mat image;
     if (!cp->read(image)) return false;
@@ -63,33 +62,34 @@ bool Detector::next(MusicParams &params) {
     // find if the center is a maxima
     if (isLocalMax()) {
     	// found a local maxima indicating hit
-    	duration = 10;
+    	duration = 1;
     	// find the location
     	vector<Point2f> predicted;
     	vector<Point2f> input;
     	input.push_back(newloc);
     	perspectiveTransform(input, predicted, homog);
+    	int predx = floor(predicted[0].x);
+    	int predy = floor(predicted[0].y);
     	if (showTracking) {
     		Mat tempIm;
-    		int tempi = floor(predicted[0].x);
-    		int tempj = floor(predicted[0].y);
-    		if (tempi >= 0 && tempj >= 0) {
+    		if (predx >= 0 && predy >= 0) {
     			imodel->toImage(tempIm);
-    			tempIm.at<uchar>(tempi, tempj) = 128;
+    			tempIm.at<uchar>(predx, predy) = 128;
     			namedWindow("board", 0);
     			imshow("board", tempIm);
     			//waitKey(5000);
     		} else {
-    			cout << "Bad point" << endl;
+    			// cout << "Bad point" << endl;
     		}
     	}
     	// set the MusicParams by reading from imodel depending on position
-    	params.frequency = 200;
-    	params.intensity = 1.0;
+    	params.note = imodel->getNote(predx, predy);
+    	params.intensity = imodel->getIntensity(predx, predy);
     	previous = params;
     } 
     else if (duration <= 0) {
-    	params.frequency = -1;
+    	params.note = -1;
+    	params.intensity = -1;
     } 
     else {
     	params = previous;
@@ -226,14 +226,20 @@ Point2f Detector::findPen(Mat &input_image) {
     for (int i = 0; i < blobs.size(); i++) {
     	if (blobs[i].size() > 150) index = i;
     }
-
-    if (index < 0) return Point2f(-1, -1);
-    int xpos = 0, ypos = 0;
-    for (int i = 0; i < blobs[index].size(); i++) {
-    	xpos += blobs[index][i].x;
-    	ypos = max(ypos, blobs[index][i].y);
+    Point2f pt;
+    if (index < 0){
+    	pt.x = -1;
+    	pt.y = -1;	
+    } else {
+    	int xpos = 0, ypos = 0;
+    	for (int i = 0; i < blobs[index].size(); i++) {
+    		xpos += blobs[index][i].x;
+    		ypos = max(ypos, blobs[index][i].y);
+   	 	}
+   		pt.x = 1.0*xpos/blobs[index].size();
+   		pt.y =  ypos;
     }
-    Point2f pt(1.0*xpos/blobs[index].size(), ypos);
+    cout << pt.x << " " << pt.y << endl;
     return pt;
 }
 

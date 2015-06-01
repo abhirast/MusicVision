@@ -13,37 +13,22 @@
 using namespace cv;
 using namespace std;
 
-int main2() {
-    string templ = "templates/template.1";
-    string vidfile = "data/piano.avi";
-    // open the video source
-    VideoCapture cp;
-    cp.open(vidfile);
-    // initialize template, open the appropriate template
-    InstrumentModel imodel(templ);
-    // initialize the detector
-    Detector detector(imodel, cp);
-    detector.init();
-    MusicParams mparams;
-    while(detector.next(mparams)) {
-
-    }
-
-    return 0;
-}
 
 int main() {
     string templ = "templates/template.1";
     string vidfile = "data/correct-piano.avi";
+    InstrumentType itype = XYLO;
     // open the video source
     VideoCapture cp;
     InstrumentModel imodel(templ);
     Detector detector(imodel, cp);
+    Player player(itype);
     cp.open(vidfile);
     detector.init();
     Mat image;
     MusicParams mparams;
-    while (detector.next(mparams)) {  
-        if (waitKey(100) > 0) break;  
+    while (detector.next(mparams)) {
+        player.play(mparams);
+        if (waitKey(100) > 0) break;
     }
 }

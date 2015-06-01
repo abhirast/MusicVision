@@ -61,9 +61,12 @@ void InstrumentModel::toImage(Mat &m) {
 }
 
 int InstrumentModel::getNote(int x, int y) {
-    return 0.0;
+    if (x < 0 || y < 0 || x >= rows || y >= cols) return -1;
+    if (values[x][y] <= 1) return -1;
+    return values[x][y];
 }
 
-double InstrumentModel::getIntensity(int x, int y) {
-    return 0.0;
+int InstrumentModel::getIntensity(int x, int y) {
+    if (x < 0 || y < 0 || x >= rows || y >= cols) return -1;
+    return intensity[x][y];
 }

@@ -25,7 +25,7 @@ public:
     std::vector<cv::Point2f> calib_points;
     InstrumentModel(std::string fileName);
     int getNote(int x, int y);
-    double getIntensity(int x, int y);
+    int getIntensity(int x, int y);
     void toImage(cv::Mat &m);    
 private:
     std::vector<std::vector<int> > intensity;
