@@ -23,18 +23,20 @@ Detector::Detector(InstrumentModel &imodel, VideoCapture &cp) : buff_size(11)
 
 bool Detector::init() {
     Mat image, gr_image;
-    cp->read(image);
-    cvtColor(image, gr_image, COLOR_BGR2GRAY);
-    find_calib_locs(gr_image, calib_markings);
-    if (showCalib) {
-        namedWindow("calibration", 0);
-     	for (int i = 0; i < calib_markings.size(); i++) {
-     		Point x((int) calib_markings[i].x, (int) calib_markings[i].y);
-            rectangle(image, x - Point(5, 5), x + Point(5, 5), 
-            	Scalar( 0, 255, 255 ), -1, 8 );
-     	}
-     	imshow("calibration", image);   
-    }
+    do {
+    	cp->read(image);
+    	cvtColor(image, gr_image, COLOR_BGR2GRAY);
+    	find_calib_locs(gr_image, calib_markings);
+    	if (showCalib) {
+        	namedWindow("calibration", 0);
+     		for (int i = 0; i < calib_markings.size(); i++) {
+     			Point x((int) calib_markings[i].x, (int) calib_markings[i].y);
+            	rectangle(image, x - Point(5, 5), x + Point(5, 5), 
+            		Scalar( 0, 255, 255 ), -1, 8 );
+     		}
+     		imshow("calibration", image);   
+   		} 
+   	} while(calib_markings.size() != 16);
     homog = findHomography(calib_markings, imodel->calib_points, CV_RANSAC);
  	for (int i = 0; i < buff_size; i++) {
  		buffer.push_back(Point2f(20.0, 20.0));
