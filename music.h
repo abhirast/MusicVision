@@ -4,8 +4,9 @@
 #include <deque>
 
 
-const bool showTracking = true;
-const bool showCalib = true;
+const bool showTracking = false;
+const bool showCalib = false;
+const bool doScoring = true;
 
 enum InstrumentType {
     XYLO,

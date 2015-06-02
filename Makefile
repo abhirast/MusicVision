@@ -6,10 +6,10 @@ CLASSES = Detector.cpp InstrumentModel.cpp Player.cpp
 
 all : source.cpp
 	@echo "\nBuilding project\n"
-	@g++ $(CFLAGS) -o music $(CLASSES) $< $(LIBS)
+	@g++ --std=c++0x $(CFLAGS) -o music $(CLASSES) $< $(LIBS)
 
 clean:
 	@rm -f music
 	
 % : %.cpp
-	g++ $(CFLAGS) -o $@ $< $(LIBS)
+	g++ --std=c++0x $(CFLAGS) -o $@ $< $(LIBS)

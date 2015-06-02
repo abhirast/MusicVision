@@ -15,8 +15,8 @@ using namespace std;
 
 
 int main() {
-    string templ = "templates/drums";
-    string vidfile = "data2/21.avi";
+    string templ = "templates/symm-6-drums";
+    string vidfile = "data3/27.avi";
     InstrumentType itype = XYLO;
     // open the video source
     VideoCapture cp;

@@ -15,7 +15,6 @@ bool Player::play(MusicParams &params){
     char cmd[100];
     sprintf(cmd, "play -q -v %f tones/%d.wav", volume, params.note);
     popen(cmd, "r");
-    cout << "played";
     return true;
 }
 

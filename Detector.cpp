@@ -24,23 +24,49 @@ Detector::Detector(InstrumentModel &imodel, VideoCapture &cp)
 
 bool Detector::init() {
     Mat image, gr_image;
-
     do {
         cp->read(image);
         cvtColor(image, gr_image, COLOR_BGR2GRAY);
         find_calib_locs(gr_image, calib_markings);
         if (showCalib) {
-            namedWindow("calibration", 0);
-     	    for (int i = 0; i < calib_markings.size(); i++) {
+            // show the detected points
+            for (int i = 0; i < calib_markings.size(); i++) {
      	  	   Point x((int) calib_markings[i].x, (int) calib_markings[i].y);
                 rectangle(image, x - Point(5, 5), x + Point(5, 5), 
             	   Scalar( 0, 255, 255 ), -1, 8 );
      	    }
-     	    imshow("calibration", image);
-     	    waitKey(0);
+     	    imshow("detected points", image);
+            waitKey(0);
         }
     } while (calib_markings.size() != imodel->calib_points.size());
+    // sort the calib markings
+    std::sort(calib_markings.begin(), calib_markings.end(), 
+        [](const cv::Point2f &a, const cv::Point2f &b){ return a.y > b.y; });
+    std::sort(calib_markings.begin(), calib_markings.begin() + 14, 
+        [](const cv::Point2f &a, const cv::Point2f &b){ return a.x > b.x; });
+    std::sort(calib_markings.begin() + 14, calib_markings.begin() + 16, 
+        [](const cv::Point2f &a, const cv::Point2f &b){ return a.x > b.x; });
+    std::sort(calib_markings.begin() + 16, calib_markings.begin() + 18, 
+        [](const cv::Point2f &a, const cv::Point2f &b){ return a.x > b.x; });
+    std::sort(calib_markings.begin() + 18, calib_markings.end(), 
+        [](const cv::Point2f &a, const cv::Point2f &b){ return a.x > b.x; });
+    
     homog = findHomography(calib_markings, imodel->calib_points, CV_RANSAC);
+    if (showCalib) {
+        // show the reconstructed points according to homography
+        vector<Point2f> predicted;
+        perspectiveTransform(calib_markings, predicted, homog);
+        Mat tempIm;
+        imodel->toImage(tempIm);
+        for (int i = 0; i < predicted.size(); i++) {
+            // cout << calib_markings[i] << endl;
+            Point x((int) predicted[i].x, (int) predicted[i].y);
+            rectangle(tempIm, x - Point(5, 5), x + Point(5, 5), 
+                128, -1, 8 );
+        }
+        namedWindow("reconstructed points", 0);
+        imshow("reconstructed points", tempIm);
+    }
  	for (int i = 0; i < buff_size; i++) {
  		buffer.push_back(Point2f(20.0, 20.0));
  	}
@@ -73,12 +99,12 @@ bool Detector::next(MusicParams &params) {
     	vector<Point2f> input;
     	input.push_back(newloc);
     	perspectiveTransform(input, predicted, homog);
-        cout << predicted[0].x << " " << predicted[0].y << endl;
     	int predx = round(predicted[0].x);
     	int predy = round(predicted[0].y);
     	if (showTracking) {
     		Mat tempIm;
     		if (predx >= 0 && predy >= 0) {
+                cout << predicted[0].x << " " << predicted[0].y << endl;
     			imodel->toImage(tempIm);
     			tempIm.at<uchar>(predx, predy) = 128;
     			namedWindow("board", 0);
@@ -88,6 +114,9 @@ bool Detector::next(MusicParams &params) {
     			// cout << "Bad point" << endl;
     		}
     	}
+        if (doScoring && predx >= 0 && predy >= 0) {
+            cout << predicted[0].x << " " << predicted[0].y << endl;
+        }
     	// set the MusicParams by reading from imodel depending on position
     	params.note = imodel->getNote(predx, predy);
     	params.intensity = imodel->getIntensity(predx, predy);
@@ -258,11 +287,11 @@ bool Detector::isLocalMax() {
     for (int i = mid; i < buffer.size(); i++) {
         if (buffer[i].y > buffer[mid].y) count++;   
     }
-    if (count == 0) {
-        cout << endl << endl;
-        for (int i = 0; i < buffer.size(); i++) cout << buffer[i] << "\t";
-        cout << endl << endl;
-    }
+    // if (count == 0) {
+        // cout << endl << endl;
+        // for (int i = 0; i < buffer.size(); i++) cout << buffer[i] << "\t";
+        // cout << endl << endl;
+    // }
 	return count < 1;
 }
 
