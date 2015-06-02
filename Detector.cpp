@@ -13,9 +13,10 @@
 using namespace cv;
 using namespace std;
 
+const int BUFFER_SIZE = 5;
 
-Detector::Detector(InstrumentModel &imodel, VideoCapture &cp) : buff_size(11)
-{
+Detector::Detector(InstrumentModel &imodel, VideoCapture &cp) 
+: buff_size(BUFFER_SIZE) {
     this->imodel = &imodel;
     this->cp = &cp;
     duration = 0;
@@ -23,19 +24,22 @@ Detector::Detector(InstrumentModel &imodel, VideoCapture &cp) : buff_size(11)
 
 bool Detector::init() {
     Mat image, gr_image;
-    cp->read(image);
-    cvtColor(image, gr_image, COLOR_BGR2GRAY);
-    find_calib_locs(gr_image, calib_markings);
-    if (showCalib) {
-        namedWindow("calibration", 0);
-     	for (int i = 0; i < calib_markings.size(); i++) {
-     		Point x((int) calib_markings[i].x, (int) calib_markings[i].y);
-            rectangle(image, x - Point(5, 5), x + Point(5, 5), 
-            	Scalar( 0, 255, 255 ), -1, 8 );
-     	}
-     	imshow("calibration", image);
-     	waitKey(0);
-    }
+
+    do {
+        cp->read(image);
+        cvtColor(image, gr_image, COLOR_BGR2GRAY);
+        find_calib_locs(gr_image, calib_markings);
+        if (showCalib) {
+            namedWindow("calibration", 0);
+     	    for (int i = 0; i < calib_markings.size(); i++) {
+     	  	   Point x((int) calib_markings[i].x, (int) calib_markings[i].y);
+                rectangle(image, x - Point(5, 5), x + Point(5, 5), 
+            	   Scalar( 0, 255, 255 ), -1, 8 );
+     	    }
+     	    imshow("calibration", image);
+     	    waitKey(0);
+        }
+    } while (calib_markings.size() != imodel->calib_points.size());
     homog = findHomography(calib_markings, imodel->calib_points, CV_RANSAC);
  	for (int i = 0; i < buff_size; i++) {
  		buffer.push_back(Point2f(20.0, 20.0));
@@ -63,14 +67,15 @@ bool Detector::next(MusicParams &params) {
     // find if the center is a maxima
     if (isLocalMax()) {
     	// found a local maxima indicating hit
-    	duration = 1;
+    	duration = 0;
     	// find the location
     	vector<Point2f> predicted;
     	vector<Point2f> input;
     	input.push_back(newloc);
     	perspectiveTransform(input, predicted, homog);
-    	int predx = floor(predicted[0].x);
-    	int predy = floor(predicted[0].y);
+        cout << predicted[0].x << " " << predicted[0].y << endl;
+    	int predx = round(predicted[0].x);
+    	int predy = round(predicted[0].y);
     	if (showTracking) {
     		Mat tempIm;
     		if (predx >= 0 && predy >= 0) {
@@ -240,16 +245,25 @@ Point2f Detector::findPen(Mat &input_image) {
    		pt.x = 1.0*xpos/blobs[index].size();
    		pt.y =  ypos;
     }
-    cout << pt.x << " " << pt.y << endl;
+    // cout << pt.x << " " << pt.y << endl;
     return pt;
 }
 
 bool Detector::isLocalMax() {
 	int count = 0;
-	for (int i = 0; i < buff_size; i++) {
-		if (buffer[i].y > buffer[floor(buff_size/2)].y) count++;
+    int mid = buffer.size()/2;
+	for (int i = 0; i < mid; i++) {
+		if (buffer[i].y >= buffer[mid].y) count++;
 	}
-	return count < 3;
+    for (int i = mid; i < buffer.size(); i++) {
+        if (buffer[i].y > buffer[mid].y) count++;   
+    }
+    if (count == 0) {
+        cout << endl << endl;
+        for (int i = 0; i < buffer.size(); i++) cout << buffer[i] << "\t";
+        cout << endl << endl;
+    }
+	return count < 1;
 }
 
 void Detector::addToBuffer(Point2f position) {
