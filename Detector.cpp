@@ -60,9 +60,8 @@ bool Detector::init() {
         imodel->toImage(tempIm);
         for (int i = 0; i < predicted.size(); i++) {
             // cout << calib_markings[i] << endl;
-            Point x((int) predicted[i].x, (int) predicted[i].y);
-            rectangle(tempIm, x - Point(5, 5), x + Point(5, 5), 
-                128, -1, 8 );
+            Point x(round(predicted[i].x), round(predicted[i].y));
+            tempIm.at<uchar>(x.x, x.y) = 128;
         }
         namedWindow("reconstructed points", 0);
         imshow("reconstructed points", tempIm);

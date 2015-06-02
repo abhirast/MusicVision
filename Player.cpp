@@ -11,7 +11,7 @@ Player::Player(InstrumentType itype) {
 
 bool Player::play(MusicParams &params){
     if (params.intensity <= 0 || params.note <= 0) return false;
-    float volume = params.intensity/10.0;
+    float volume = params.intensity/13.0;
     char cmd[100];
     sprintf(cmd, "play -q -v %f tones/%d.wav", volume, params.note);
     popen(cmd, "r");

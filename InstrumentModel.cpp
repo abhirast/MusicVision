@@ -9,9 +9,9 @@
 using namespace std;
 using namespace cv;
 
-InstrumentModel::InstrumentModel(string fileName) {
+InstrumentModel::InstrumentModel(char* fileName) {
 	string line;
-	ifstream templ(fileName.c_str());
+	ifstream templ(fileName);
 	if (!templ.is_open()) {
 		cout << "Unable to open template\n";
 	}
@@ -63,7 +63,7 @@ void InstrumentModel::toImage(Mat &m) {
 int InstrumentModel::getNote(int x, int y) {
     if (x < 0 || y < 0 || x >= rows || y >= cols) return -1;
     if (values[x][y] <= 1) return -1;
-    return values[x][y];
+    return values[x][y] - 1;
 }
 
 int InstrumentModel::getIntensity(int x, int y) {

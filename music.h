@@ -1,16 +1,20 @@
+#ifndef MUSIC_H
+#define MUSIC_H
+
 #include <map>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <deque>
 
 
-const bool showTracking = false;
-const bool showCalib = false;
+const bool showTracking = true;
+const bool showCalib = true;
 const bool doScoring = true;
 
 enum InstrumentType {
+    PIANO,
     XYLO,
-    DRUM
+    DRUMS
 };
 
 
@@ -24,7 +28,7 @@ public:
     int rows;
     int cols;
     std::vector<cv::Point2f> calib_points;
-    InstrumentModel(std::string fileName);
+    InstrumentModel(char* fileName);
     int getNote(int x, int y);
     int getIntensity(int x, int y);
     void toImage(cv::Mat &m);    
@@ -68,3 +72,4 @@ private:
     InstrumentType itype;
 };
 
+#endif
