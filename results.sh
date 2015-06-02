@@ -1,0 +1,9 @@
+./music xylo 1 > xylo-1.txt
+./music xylo 2 > xylo-2.txt
+./music xylo 3 > xylo-3.txt
+./music piano 1 > piano-1.txt
+./music piano 2 > piano-2.txt
+./music piano 3 > piano-3.txt
+./music drums 1 > drums-1.txt
+./music drums 2 > drums-2.txt
+./music drums 3 > drums-3.txt

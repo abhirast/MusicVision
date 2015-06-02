@@ -36,7 +36,7 @@ bool Detector::init() {
             	   Scalar( 0, 255, 255 ), -1, 8 );
      	    }
      	    imshow("detected points", image);
-            imwrite("1.jpg", image);
+            waitKey(0);
         }
     } while (calib_markings.size() != imodel->calib_points.size());
     // sort the calib markings
@@ -87,7 +87,6 @@ bool Detector::next(MusicParams &params) {
         rectangle(image, x - Point(5, 5), x + Point(5, 5), 
         			Scalar( 0, 255, 255 ), -1, 8);
         imshow("temp", image);
-        imwrite("2.jpg", image);
     }
     
     // find if the center is a maxima
@@ -104,15 +103,11 @@ bool Detector::next(MusicParams &params) {
     	if (showTracking) {
     		Mat tempIm;
     		if (predx >= 0 && predy >= 0) {
-                cout << predicted[0].x << " " << predicted[0].y << endl;
-    			imodel->toImage(tempIm);
+                imodel->toImage(tempIm);
     			tempIm.at<uchar>(predx, predy) = 128;
     			namedWindow("board", 0);
     			imshow("board", tempIm);
-                imwrite("3.jpg", tempIm);
-    			waitKey(0);
-                waitKey(0);
-                waitKey(0);
+    			//waitKey(5000);
     		} else {
     			// cout << "Bad point" << endl;
     		}
@@ -250,7 +245,7 @@ Point2f Detector::findPen(Mat &input_image) {
 	int iLowV =  0, iHighV = 255;
 	
 	Mat hsv_tx_image, color_thresh_image, bin_image;
-    imwrite("4.jpg", input_image);
+
 	cvtColor(input_image, hsv_tx_image, COLOR_BGR2HSV);
 	inRange(hsv_tx_image, Scalar(iLowH, iLowS, iLowV), 
 				Scalar(iHighH, iHighS, iHighV), color_thresh_image);
@@ -258,7 +253,7 @@ Point2f Detector::findPen(Mat &input_image) {
     color_thresh_image.convertTo(bin_image, CV_8UC1);
     vector<vector<Point> > blobs;
     find_connected_components(bin_image, blobs);
-    imwrite("5.jpg", bin_image);
+
     // look for connected component of size greater than 150
     int index = -1;
     for (int i = 0; i < blobs.size(); i++) {
