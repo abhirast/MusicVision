@@ -9,7 +9,7 @@
 
 const bool showTracking = true;
 const bool showCalib = true;
-const bool doScoring = true;
+const bool doScoring = false;
 
 enum InstrumentType {
     PIANO,

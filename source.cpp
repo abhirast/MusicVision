@@ -42,6 +42,6 @@ int main(int argc, char** argv) {
     MusicParams mparams;
     while (detector.next(mparams)) {
         player.play(mparams);
-        if (waitKey(1) > 0) break;
+        if (waitKey(15) > 0) break;
     }
 }

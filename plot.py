@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-f = open('drums.txt')
+f = open('data.txt')
 nums = f.readlines()
 
 vals = map(lambda t:map(float, t.strip().split()), nums)
@@ -13,6 +13,8 @@ res = []
 for i in range(1, len(y) - 1):
     res.append(np.mean(y[i-1:i+2]))
 
-plt.subplot(211), plt.plot(y)
-plt.subplot(212), plt.plot(res)
+plt.plot(y)
+plt.xlabel("frame number")
+plt.ylabel("y-coordinate of marker in input image")
+plt.title("Detecting hits")
 plt.show()

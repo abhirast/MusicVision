@@ -36,7 +36,7 @@ bool Detector::init() {
             	   Scalar( 0, 255, 255 ), -1, 8 );
      	    }
      	    imshow("detected points", image);
-            waitKey(0);
+            // waitKey(0);
         }
     } while (calib_markings.size() != imodel->calib_points.size());
     // sort the calib markings
@@ -166,10 +166,11 @@ void Detector::find_calib_locs(Mat &image, vector<Point2f> &locs) {
     erode(page, res, element);
     // find_connected_components(page, blobs);
     find_connected_components(res, blobs);
-    
+    float lowthres = (image.rows * image.cols * 15)* 1.0 / (640 * 480);
+    float highthres = (image.rows * image.cols * 1000)* 1.0 / (640 * 480);
     locs.clear();
     for (int i = 0; i < blobs.size(); i++) {
-        if (blobs[i].size() > 15 && blobs[i].size() < 1000) {
+        if (blobs[i].size() > lowthres && blobs[i].size() < highthres) {
             locs.push_back(find_mean(blobs[i]));
         }
     }
@@ -243,12 +244,14 @@ Point2f Detector::findPen(Mat &input_image) {
 	int iLowH = 39, iHighH =  80;
 	int iLowS = 57, iHighS = 157;
 	int iLowV =  0, iHighV = 255;
-	
+    imshow("input image", input_image);	
 	Mat hsv_tx_image, color_thresh_image, bin_image;
 
 	cvtColor(input_image, hsv_tx_image, COLOR_BGR2HSV);
+    imshow("hsv image", hsv_tx_image);
 	inRange(hsv_tx_image, Scalar(iLowH, iLowS, iLowV), 
 				Scalar(iHighH, iHighS, iHighV), color_thresh_image);
+    imshow("thres image", color_thresh_image);
     
     color_thresh_image.convertTo(bin_image, CV_8UC1);
     vector<vector<Point> > blobs;
@@ -272,7 +275,7 @@ Point2f Detector::findPen(Mat &input_image) {
    		pt.x = 1.0*xpos/blobs[index].size();
    		pt.y =  ypos;
     }
-    // cout << pt.x << " " << pt.y << endl;
+    cout << pt.x << " " << pt.y << endl;
     return pt;
 }
 
